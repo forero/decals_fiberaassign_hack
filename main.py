@@ -193,6 +193,7 @@ if not os.path.exists(zcat_dark):
     zcat.write(zcat_dark, overwrite=True)
     print('finished zcat')
     
+
 zcat_bright = 'data/zcat_bright.fits'
 if not os.path.exists(zcat_bright):
     tile_files = glob.glob('output/bright/tile_*.fits')
