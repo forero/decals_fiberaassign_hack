@@ -5,6 +5,8 @@ from astropy.table import Table
 import numpy as np
 from desitarget.targetmask import desi_mask, bgs_mask, mws_mask, obsmask, obsconditions
 import fitsio
+import glob
+from desisim.quickcat import quickcat
 
 # target selection
 targetfile = "data/dr6_targets.fits"
@@ -21,6 +23,47 @@ columns = [
     'TARGETID', 'RA', 'DEC', 'SUBPRIORITY', 'BRICKNAME',
     'DESI_TARGET', 'BGS_TARGET', 'MWS_TARGET',
 ]
+
+#truth file
+truthfile = "data/truth.fits"
+if not os.path.exists(truthfile):
+    import desitarget.mock.mockmaker as mb
+    from desitarget.targetmask import desi_mask, bgs_mask, mws_mask
+
+    #targetsfilename = "small_chunk_targets-dr5.0-0.16.2.fits"
+    targets = fitsio.read(targetfile, 'TARGETS', columns=columns)
+    colnames = list(targets.dtype.names)
+    print(colnames)
+    nobj = len(targets)
+    truth = mb.empty_truth_table(nobj=nobj)
+    print(truth.keys())
+
+    for k in colnames:
+        if k in truth.keys():
+            print(k)
+            truth[k][:] = targets[k][:]
+
+    nothing = '          '
+    truth['TEMPLATESUBTYPE'] = np.repeat(nothing, nobj)
+
+    masks = ['BGS_ANY', 'ELG', 'LRG', 'QSO', 'STD_FSTAR', 'STD_BRIGHT']
+    dict_truespectype = {'BGS_ANY':'GALAXY', 'ELG':'GALAXY', 'LRG':'GALAXY', 'QSO':'QSO', 
+                    'STD_FSTAR':'STAR', 'STD_BRIGHT':'STAR'}
+    dict_truetemplatetype = {'BGS_ANY':'BGS', 'ELG':'ELG', 'LRG':'LRG', 'QSO':'QSO', 
+                        'STD_FSTAR':'STAR', 'STD_BRIGHT':'STAR'}
+
+    for m in masks:
+        istype = (targets['DESI_TARGET'] & desi_mask.mask(m))!=0
+        print(m, np.count_nonzero(istype))
+        truth['TRUESPECTYPE'][istype] = np.repeat(dict_truespectype[m], np.count_nonzero(istype))
+        truth['TEMPLATETYPE'][istype] = np.repeat(dict_truetemplatetype[m], np.count_nonzero(istype))
+        truth['MOCKID'][istype] = targets['TARGETID'][istype]
+
+    del targets
+    print('writing truth')
+    truth.write(truthfile, overwrite=True)
+    print('done truth')
+
 
 #generate sky data
 from desitarget.mock.sky import random_sky
@@ -132,6 +175,39 @@ if not os.path.exists(output_bright):
     print('starting fiberassign for dark tiles')
     subprocess.call(cmd.split())
     print('finished fiberassign for dark tiles')
+    
+    
+zcat_dark = 'data/zcat_dark.fits'
+if not os.path.exists(zcat_dark):
+    tile_files = glob.glob('output/dark/tile_*.fits')
+    print('{} files to gather'.format(len(tile_files)))
+
+    print('reading mtl')
+    mtl = Table.read('data/mtl.fits')
+    print('reading truth')
+    truth = Table.read('data/truth.fits')
+
+    print('making zcat')
+    zcat = quickcat(tile_files, mtl, truth, perfect=True)
+    print('writing zcat')
+    zcat.write(zcat_dark, overwrite=True)
+    print('finished zcat')
+    
+zcat_bright = 'data/zcat_bright.fits'
+if not os.path.exists(zcat_dark):
+    tile_files = glob.glob('output/bright/tile_*.fits')
+    print('{} files to gather'.format(len(tile_files)))
+
+    print('reading mtl')
+    mtl = Table.read('data/mtl.fits')
+    print('reading truth')
+    truth = Table.read('data/truth.fits')
+
+    print('making zcat')
+    zcat = quickcat(tile_files, mtl, truth, perfect=True)
+    print('writing zcat')
+    zcat.write(zcat_bright, overwrite=True)
+    print('finished zcat')
 
 
 
