@@ -194,7 +194,7 @@ if not os.path.exists(zcat_dark):
     print('finished zcat')
     
 zcat_bright = 'data/zcat_bright.fits'
-if not os.path.exists(zcat_dark):
+if not os.path.exists(zcat_bright):
     tile_files = glob.glob('output/bright/tile_*.fits')
     print('{} files to gather'.format(len(tile_files)))
 
