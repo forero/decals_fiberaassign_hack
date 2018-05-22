@@ -1,1 +1,0 @@
-DECALS_PATH = '/global/project/projectdirs/cosmo/data/legacysurvey/dr6/'
