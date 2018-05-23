@@ -1,7 +1,7 @@
 # Reuses some info from Stephen Bailey shared on [desi-data 3401] "running fiber assignment on a real target catalog"
 import os
 import subprocess
-from astropy.table import Table
+from astropy.table import Table, join
 import numpy as np
 from desitarget.targetmask import desi_mask, bgs_mask, mws_mask, obsmask, obsconditions
 import fitsio
@@ -9,8 +9,8 @@ import glob
 from desisim.quickcat import quickcat
 
 # target selection
-targetfile = "data/dr6_targets.fits"
-os.environ['DECALS_PATH'] = '/global/project/projectdirs/cosmo/data/legacysurvey/dr6/'
+targetfile = "data/dr5_targets.fits"
+os.environ['DECALS_PATH'] = '/global/project/projectdirs/cosmo/data/legacysurvey/dr5/'
 
 if not os.path.exists(targetfile):
     cmd = "select_targets {source} {destination}"
@@ -210,7 +210,18 @@ if not os.path.exists(zcat_bright):
     zcat.write(zcat_bright, overwrite=True)
     print('finished zcat')
 
-
+zcat_viewer_dark = 'data/zcat_viewer_dark.fits'
+if not os.path.exists(zcat_viewer_dark):
+    print('loading zcat')
+    zcat = Table.read(zcat_dark)
+    print('loading targets')
+    targets = Table.read(targetfile)
+    print('joining tables')
+    zfinal = join(zcat, targets['TARGETID', 'RA', 'DEC'],
+                            keys='TARGETID', join_type='outer')
+    print('writing zfinal')
+    zfinal.write(zcat_viewer_dark, overwrite=True)
+    print('finished viewer file')
 
 
 
