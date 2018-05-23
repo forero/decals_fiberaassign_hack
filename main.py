@@ -210,7 +210,8 @@ if not os.path.exists(zcat_bright):
     zcat.write(zcat_bright, overwrite=True)
     print('finished zcat')
 
-zcat_viewer_dark = 'data/zcat_viewer_dark.fits'
+# add RA,DEC info
+zcat_viewer_dark = 'data/zcat_viewer_sample_dark.fits'
 if not os.path.exists(zcat_viewer_dark):
     print('loading zcat')
     zcat = Table.read(zcat_dark)
@@ -219,9 +220,29 @@ if not os.path.exists(zcat_viewer_dark):
     print('joining tables')
     zfinal = join(zcat, targets['TARGETID', 'RA', 'DEC'],
                             keys='TARGETID', join_type='outer')
+    ii = (zfinal['RA']<210.0) &  (zfinal['RA']>208) & (zfinal['DEC']<6.0) & (zfinal['DEC']>4.0)
+    zfinal = zfinal[ii]
     print('writing zfinal')
-    zfinal.write(zcat_viewer_dark, overwrite=True)
-    print('finished viewer file')
+    zfinal['TARGETID', 'RA', 'DEC'].write(zcat_viewer_dark, overwrite=True)
+    print('finished dark viewer file')
+
+
+# add RA,DEC info
+zcat_viewer_bright = 'data/zcat_viewer_sample_bright.fits'
+if not os.path.exists(zcat_viewer_bright):
+    print('loading zcat')
+    zcat = Table.read(zcat_bright)
+    print('loading targets')
+    targets = Table.read(targetfile)
+    print('joining tables')
+    zfinal = join(zcat, targets['TARGETID', 'RA', 'DEC'],
+                            keys='TARGETID', join_type='outer')
+
+    ii = (zfinal['RA']<210.0) &  (zfinal['RA']>208) & (zfinal['DEC']<6.0) & (zfinal['DEC']>4.0)
+    zfinal = zfinal[ii]
+    print('writing zfinal')
+    zfinal['TARGETID', 'RA', 'DEC'].write(zcat_viewer_bright, overwrite=True)
+    print('finished bright viewer file')
 
 
 
