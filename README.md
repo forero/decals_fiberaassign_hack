@@ -22,3 +22,4 @@ python main.py
 
 After that you can use visualize a single pointing file (i.e. `output/bright/tile_30900.fits`)
 using http://legacysurvey.org/viewer/
+
