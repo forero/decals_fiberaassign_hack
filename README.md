@@ -1,4 +1,4 @@
-# fiberassigon on DR5
+# fiberassign on DR5
 
 Running fiberassign on DECaLS data (DR5) using a single python script.
 
